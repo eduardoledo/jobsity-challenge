@@ -15,6 +15,13 @@ $ENV = $_ENV['ENV'] ?? 'dev';
 
 $containerBuilder = new ContainerBuilder();
 
+$settings = require __DIR__ . '/../app/settings.php';
+$settings($containerBuilder);
+
+$doctrine = $doctrine = require __DIR__ . '/../app/bootstrap.php';
+$doctrine($containerBuilder);
+
+
 // Import services
 $dependencies = require __DIR__ . '/../app/services.php';
 $dependencies($containerBuilder);
