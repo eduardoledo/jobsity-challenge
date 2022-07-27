@@ -9,6 +9,8 @@ use Psr\Container\ContainerInterface;
 use Symfony\Component\Cache\Adapter\ArrayAdapter;
 use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 use DI\ContainerBuilder;
+use Doctrine\Common\Annotations\AnnotationReader;
+use Doctrine\ORM\Mapping\Driver\AnnotationDriver;
 
 return function (ContainerBuilder $containerBuilder) {
 
@@ -28,6 +30,13 @@ return function (ContainerBuilder $containerBuilder) {
                 $settings['doctrine']['dev_mode'],
                 null,
                 $cache
+            );
+
+            $config->setMetadataDriverImpl(
+                new AnnotationDriver(
+                    new AnnotationReader(),
+                    $settings['doctrine']['metadata_dirs']
+                )
             );
 
             return EntityManager::create($settings['doctrine']['connection'], $config);

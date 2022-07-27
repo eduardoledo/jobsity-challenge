@@ -41,14 +41,7 @@ return  function (ContainerBuilder $containerBuilder) {
                 // Refer to the Doctrine documentation to see the full list
                 // of valid parameters: https://www.doctrine-project.org/projects/doctrine-dbal/en/current/reference/configuration.html
                 'connection' => [
-                    // 'driver' => 'pdo_mysql',
-                    // 'host' => 'localhost',
-                    // 'port' => 3306,
-                    // 'dbname' => 'mydb',
-                    // 'user' => 'user',
-                    // 'password' => 'secret',
-                    // 'charset' => 'utf-8',
-                    'url' => $_ENV['DATABASE_URL']
+                    'url' => getenv('DATABASE_URL')
                 ]
             ]
         ]
