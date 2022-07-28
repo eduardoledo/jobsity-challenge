@@ -5,26 +5,29 @@ declare(strict_types=1);
 namespace App\Controller;
 
 use App\Entity\Query;
-use App\Entity\User;
 use App\Service\QueryService;
 use App\Service\UserService;
 use DateTime;
-use Doctrine\ORM\EntityManager;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\Exception\HttpBadRequestException;
-use Slim\Exception\HttpException;
-use Slim\Routing\RouteParser;
+use Swift_Mailer;
+use Swift_Message;
 
 class ApiController
 {
     private QueryService $queryService;
     private $userService;
+    private Swift_Mailer $mailer;
 
-    public function __construct(QueryService $queryService, UserService $userService)
-    {
+    public function __construct(
+        QueryService $queryService,
+        UserService $userService,
+        Swift_Mailer $mailer
+    ) {
         $this->queryService = $queryService;
         $this->userService = $userService;
+        $this->mailer = $mailer;
     }
 
     public function getStockQuote(Request $request, Response $response, array $args): Response
@@ -44,6 +47,20 @@ class ApiController
                 $query = $this->queryService->save(Query::fromAssocArray($symbol, $user));
 
                 $assoc = $query->toAssocArray();
+
+                $msgBody = join(
+                    "\n",
+                    array_map(function ($k, $v) {
+                        return "{$k} = {$v}";
+                    }, array_keys($assoc), array_values($assoc))
+                );
+                $message = (new Swift_Message('Hello from PHP Challenge'))
+                    ->setFrom(['phpchallenge@jobsity.io' => 'PHP Challenge'])
+                    ->setTo([$user->getEmail()])
+                    ->setBody($msgBody);
+
+                // Later just do the actual email sending.
+                $this->mailer->send($message);
 
                 unset($assoc['date']);
 
