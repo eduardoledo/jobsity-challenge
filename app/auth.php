@@ -2,22 +2,29 @@
 
 declare(strict_types=1);
 
+use App\Auth\DoctrineAuthenticator;
+use DI\Container;
+use Doctrine\ORM\EntityManager;
 use Slim\App;
 use Slim\Exception\HttpUnauthorizedException;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Psr\Http\Message\ServerRequestInterface;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Psr\Http\Server\RequestHandlerInterface;
+use Tuupola\Http\Factory\ResponseFactory;
 use Tuupola\Middleware\HttpBasicAuthentication;
 
 return function (App $app) {
-    $username = $_ENV["ADMIN_USERNAME"] ?? 'root';
-    $password = $_ENV["ADMIN_PASSWORD"] ?? 'secret';
+    /** @var Container $container */
+    $container = $app->getContainer();
+    $em = $container->get(EntityManager::class);
+
+    $app->addBodyParsingMiddleware();
 
     // 1st middleware to configure basic authentication
     $app->add(new HttpBasicAuthentication([
-        "path" => ["/bye"], // protected routes
-        "users" => [
-            $username => $password,
-        ],
+        "path" => ["/bye", "/history", "/stock"], // protected routes
+        "authenticator" => new DoctrineAuthenticator($em),
         "error" => function ($response) {
             return $response->withStatus(401);
         }
@@ -28,10 +35,11 @@ return function (App $app) {
     $app->add(function (Request $request, RequestHandler $handler) {
         $response = $handler->handle($request);
         $statusCode = $response->getStatusCode();
+        $headers = $request->getHeaders();
 
-        if ($statusCode == 401) {
-            throw new HttpUnauthorizedException($request);
-        }
+        // if ($statusCode == 401) {
+        //     throw new HttpUnauthorizedException($request);
+        // }
 
         return $response;
     });
